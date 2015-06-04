@@ -5,6 +5,7 @@
 import pdb
 from models.numrange import NumRange
 from models.gentree import GenTree
+import random
 
 
 __DEBUG = True
@@ -65,6 +66,10 @@ def NCP(record1, record2):
     pass
 
 
+def NCP_dis(record1, record2):
+    mid = middle(record1, record2)
+
+
 def middle(record1, record2):
     pass
 
@@ -73,8 +78,28 @@ def balance():
     pass
 
 
-def get_pair():
-    pass
+def get_pair(partition):
+    """
+    To get max distance pair in partition, we need O(n^2) running time.
+    The author proposed a heuristic method: random pick u and get max_dis(u, v)
+    with O(n) running tiem; then pick max(v, U2)...after run gl_rounds times.
+    the dis(u, v) is nearly max.
+    """
+    ls = len(partition.member)
+    for i in range(gl_rounds):
+        if i == 0:
+            u = random.randrange(ls)
+        else:
+            u = v
+        max_dis = 0
+        max_index = 0
+        for i in range(ls):
+            if i != u:
+                rncp = NCP(partition.member[i], partition.member[u])
+                if max_dis > rncp:
+                    max_dis = rncp
+                    max_index = i
+        v = max_index
 
 
 def cmp_str(element1, element2):
@@ -96,8 +121,7 @@ def anonymize(partition):
     Main procedure of top_down_greedy_anonymization.
     recursively partition groups until not allowable.
     """
-    
-    
+
 
 
 def Top_Down_Greedy_Anonymization(att_trees, data, K):
