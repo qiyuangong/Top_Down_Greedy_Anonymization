@@ -48,19 +48,6 @@ def list_to_str(value_list, cmpfun=cmp, sep=';'):
     return sep.join(temp)
 
 
-def check_K_anonymity(partition):
-    """check if partition satisfy l-diversity
-    return True if satisfy, False if not.
-    """
-    sa_dict = {}
-    if isinstance(partition, Partition):
-        ltemp = partition.member
-    else:
-        ltemp = partition
-    if len(ltemp) >= gl_K:
-        return True
-    return False
-
 
 def NCP(record1, record2):
     pass
@@ -108,12 +95,6 @@ def cmp_str(element1, element2):
     return cmp(int(element1), int(element2))
 
 
-def getNormalizedWidth(partition, index):
-    """return Normalized width of partition
-    similar to NCP
-    """
-    width = partition.width[index]
-    return width * 1.0 / gl_QI_range[index]
 
 
 def anonymize(partition):
