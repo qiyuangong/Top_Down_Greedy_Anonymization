@@ -5,6 +5,7 @@
 import pdb
 from models.numrange import NumRange
 from models.gentree import GenTree
+import operator
 import random
 
 
@@ -48,20 +49,42 @@ def list_to_str(value_list, cmpfun=cmp, sep=';'):
     return sep.join(temp)
 
 
-
-def NCP(record1, record2):
+def NCP(record):
     pass
 
 
 def NCP_dis(record1, record2):
     mid = middle(record1, record2)
+    return 2 * NCP(middle)
 
 
-def middle(record1, record2):
+def NCP_dis_merge(partition, addition_set):
+    return middle_record(middle_group(addition_set), partition.middle)
+
+
+def NCP_dis_group(record, partition):
+    """
+    compute the NCP of record and partition
+    """
+    mid = middle_record(record, partition.middle)
+    ncp = NCP(mid)
+    return (1 + len(partition.member)) * ncp
+
+
+def middle_record(record1, record2):
+    """
+    get the generalization result of record1 and record2
+    """
+    mid = []
+    for i in range(gl_QI_len):
+        mid.append(LCA(record1[i], record2[i], i))
+
+
+def middle_group(group_set):
     pass
 
 
-def balance():
+def LCA(u, v, index):
     pass
 
 
@@ -87,6 +110,7 @@ def get_pair(partition):
                     max_dis = rncp
                     max_index = i
         v = max_index
+    return (u, v)
 
 
 def cmp_str(element1, element2):
@@ -95,6 +119,66 @@ def cmp_str(element1, element2):
     return cmp(int(element1), int(element2))
 
 
+def distribute_record(u, v, partition):
+    """
+    Distribute records based on NCP distance.
+    records will be assigned to nearer group.
+    """
+    if can_split(partition) is False:
+        gl_result.append(partition)
+        return
+    sub_partitions = [partition()]
+    r_u = partition.member[u][:]
+    r_v = partition.member[v][:]
+    r_partition = [r_u]
+    v_partition = [r_v]
+    partition.member = [item for index, item in enumerate(partition.member) if index not in set(u, v)]
+    for t in partition.member:
+        u_dis = NCP_dis(r_u, t)
+        v_dis = NCP_dis(r_v, t)
+        if u_dis > v_dis:
+            v_partition.append(t)
+        else:
+            u_partition.append(t)
+    return [Partition(u_partition, partition.width, partition.middle),
+            Partition(v_partition, partition.width, partition.middle)]
+
+
+def balance(sub_partitions, index):
+    """
+    Two kinds of balance methods.
+    1) Move some records from other groups
+    2) Merge with nearest group
+    The algorithm will choose one of them with minimal NCP
+    index store the sub_partition with less than k records
+    """
+    less = sub_partitions.pop(index)
+    more = sub_partitions.pop()
+    all_length = len(less.member) + len(more.member)
+    require = gl_K - len(less.member)
+    # First method
+    dist = {}
+    sorted_dist = sorted(dist.iteritems(),
+                         key=operator.itemgetter(1))
+    nearest_index = [t[0] for t in sorted_dist]
+    addition_set = [t for i, t in enumerate(more.member) if i in set(nearest_index)]
+    first_ncp = NCP_dis_merge(less, addition_set)
+    # Second method
+    second_nec = all_length * NCP_dis(less.middle, more.middle)
+    if first_ncp < second_nec:
+        pass
+    else:
+        pass
+    return sub_partitions
+
+
+def can_split(partition):
+    """
+    check if partition can be further splited.
+    """
+    if len(partition.member) < 2 * gl_K:
+        return False
+    return True
 
 
 def anonymize(partition):
@@ -102,7 +186,14 @@ def anonymize(partition):
     Main procedure of top_down_greedy_anonymization.
     recursively partition groups until not allowable.
     """
-
+    u, v = get_pair(partition)
+    sub_partitions = distribute_record(u, v, partition)
+    if len(sub_partitions[0].member) < gl_K:
+        balance(sub_partitions, 0)
+    elif len(sub_partitions[1].member) < gl_K:
+        balance(sub_partitions, 1)
+    for t in sub_partitions:
+        anonymize(t)
 
 
 def Top_Down_Greedy_Anonymization(att_trees, data, K):
