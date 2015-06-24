@@ -50,7 +50,11 @@ def list_to_str(value_list, cmpfun=cmp, sep=';'):
 
 
 def NCP(record):
-    pass
+    r_NCP = 0.0
+    for i in range(gl_QI_len):
+        r_NCP += gl_att_trees[i][record[i]].support / gl_QI_range[i]
+    r_NCP /= gl_QI_len
+    return r_NCP
 
 
 def NCP_dis(record1, record2):
@@ -78,6 +82,7 @@ def middle_record(record1, record2):
     mid = []
     for i in range(gl_QI_len):
         mid.append(LCA(record1[i], record2[i], i))
+    return mid
 
 
 def middle_group(group_set):
@@ -85,8 +90,17 @@ def middle_group(group_set):
 
 
 def LCA(u, v, index):
-    pass
-
+    # dict
+    tree_temp = gl_att_trees[index]
+    u_parent = tree_temp[u].reverse()
+    v_parent = tree_temp[v].reverse()
+    ls = min(len(u_parent), len(v_parent))
+    for i in range(ls):
+        if u_parent[i] != v_parent:
+            break
+        else:
+            last = i
+    return u_parent[last]
 
 def get_pair(partition):
     """
