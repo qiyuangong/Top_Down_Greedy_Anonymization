@@ -58,12 +58,16 @@ def NCP(record):
 
 
 def NCP_dis(record1, record2):
-    mid = middle(record1, record2)
-    return 2 * NCP(middle)
+    mid = middle_record(record1, record2)
+    return 2 * NCP(mid)
 
 
 def NCP_dis_merge(partition, addition_set):
-    return middle_record(middle_group(addition_set), partition.middle)
+    ls = len(addition_set)
+    mid = partition.middle
+    for i in range(ls):
+        mid = middle_record(mid, addition_set[i])
+    return NCP(mid) * (ls + len(partition.member))
 
 
 def NCP_dis_group(record, partition):
@@ -92,15 +96,18 @@ def middle_group(group_set):
 def LCA(u, v, index):
     # dict
     tree_temp = gl_att_trees[index]
-    u_parent = tree_temp[u].reverse()
-    v_parent = tree_temp[v].reverse()
+    u_parent = list(tree_temp[u].parent)
+    v_parent = list(tree_temp[v].parent)
     ls = min(len(u_parent), len(v_parent))
+    if ls == 0:
+        return '*'
     for i in range(ls):
-        if u_parent[i] != v_parent:
+        pos = - 1 - i
+        if u_parent[pos] != v_parent[pos]:
             break
-        else:
-            last = i
-    return u_parent[last]
+        last = pos
+    return u_parent[last].value
+
 
 def get_pair(partition):
     """
@@ -119,8 +126,8 @@ def get_pair(partition):
         max_index = 0
         for i in range(ls):
             if i != u:
-                rncp = NCP(partition.member[i], partition.member[u])
-                if max_dis > rncp:
+                rncp = NCP_dis(partition.member[i], partition.member[u])
+                if rncp > max_dis:
                     max_dis = rncp
                     max_index = i
         v = max_index
@@ -141,12 +148,11 @@ def distribute_record(u, v, partition):
     if can_split(partition) is False:
         gl_result.append(partition)
         return
-    sub_partitions = [partition()]
     r_u = partition.member[u][:]
     r_v = partition.member[v][:]
-    r_partition = [r_u]
+    u_partition = [r_u]
     v_partition = [r_v]
-    partition.member = [item for index, item in enumerate(partition.member) if index not in set(u, v)]
+    partition.member = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
     for t in partition.member:
         u_dis = NCP_dis(r_u, t)
         v_dis = NCP_dis(r_v, t)
@@ -179,6 +185,7 @@ def balance(sub_partitions, index):
     first_ncp = NCP_dis_merge(less, addition_set)
     # Second method
     second_nec = all_length * NCP_dis(less.middle, more.middle)
+    # TODO first and second
     if first_ncp < second_nec:
         pass
     else:

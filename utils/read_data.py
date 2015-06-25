@@ -16,7 +16,7 @@ gl_useratt = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
 gl_conditionatt = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
 gl_attlist = [3, 4, 6, 13, 16]
-gl_if_cat = [True, True, True, True, False]
+gl_if_cat = [True, True, True, True, True]
 
 
 def cmp_str(element1, element2):

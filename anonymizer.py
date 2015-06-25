@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-from Top_Down_Greedy_Anonymization import Top_Down_Greedy_Anonymization
+from top_down_greedy_anonymization import Top_Down_Greedy_Anonymization
 from utils.read_data import read_data, read_tree
 import sys
 import pdb
