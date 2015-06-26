@@ -23,17 +23,15 @@ class Partition:
     """Class for Group, which is used to keep records
     Store tree node in instances.
     self.member: records in group
-    self.width: width of this partition on each domain
     self.middle: save the generalization result of this partition
     self.allow: 0 donate that not allow to split, 1 donate can be split
     """
 
-    def __init__(self, data, width, middle):
+    def __init__(self, data, middle):
         """
-        initialize with data, width and middle
+        initialize with data and middle
         """
         self.member = data[:]
-        self.width = width[:]
         self.middle = middle[:]
         self.allow = [1] * gl_QI_len
 
@@ -59,7 +57,7 @@ def NCP(record):
 
 def NCP_dis(record1, record2):
     mid = middle_record(record1, record2)
-    return 2 * NCP(mid)
+    return NCP(mid), mid
 
 
 def NCP_dis_merge(partition, addition_set):
@@ -67,7 +65,7 @@ def NCP_dis_merge(partition, addition_set):
     mid = partition.middle
     for i in range(ls):
         mid = middle_record(mid, addition_set[i])
-    return NCP(mid) * (ls + len(partition.member))
+    return NCP(mid), mid
 
 
 def NCP_dis_group(record, partition):
@@ -90,7 +88,11 @@ def middle_record(record1, record2):
 
 
 def middle_group(group_set):
-    pass
+    ls = len(group_set)
+    mid = group_set[0]
+    for i in range(1, ls):
+        mid = middle_record(mid, group_set[i])
+    return mid
 
 
 def LCA(u, v, index):
@@ -126,7 +128,7 @@ def get_pair(partition):
         max_index = 0
         for i in range(ls):
             if i != u:
-                rncp = NCP_dis(partition.member[i], partition.member[u])
+                rncp, __ = NCP_dis(partition.member[i], partition.member[u])
                 if rncp > max_dis:
                     max_dis = rncp
                     max_index = i
@@ -145,23 +147,20 @@ def distribute_record(u, v, partition):
     Distribute records based on NCP distance.
     records will be assigned to nearer group.
     """
-    if can_split(partition) is False:
-        gl_result.append(partition)
-        return
     r_u = partition.member[u][:]
     r_v = partition.member[v][:]
     u_partition = [r_u]
     v_partition = [r_v]
     partition.member = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
     for t in partition.member:
-        u_dis = NCP_dis(r_u, t)
-        v_dis = NCP_dis(r_v, t)
+        u_dis, __ = NCP_dis(r_u, t)
+        v_dis, __ = NCP_dis(r_v, t)
         if u_dis > v_dis:
             v_partition.append(t)
         else:
             u_partition.append(t)
-    return [Partition(u_partition, partition.width, partition.middle),
-            Partition(v_partition, partition.width, partition.middle)]
+    return [Partition(u_partition, middle_group(u_partition)),
+            Partition(v_partition, middle_group(v_partition))]
 
 
 def balance(sub_partitions, index):
@@ -178,18 +177,30 @@ def balance(sub_partitions, index):
     require = gl_K - len(less.member)
     # First method
     dist = {}
+    for i, t in enumerate(more.member):
+        dist[i], __ = NCP_dis(less.middle, t)
     sorted_dist = sorted(dist.iteritems(),
                          key=operator.itemgetter(1))
     nearest_index = [t[0] for t in sorted_dist]
+    nearest_index = nearest_index[:require]
     addition_set = [t for i, t in enumerate(more.member) if i in set(nearest_index)]
-    first_ncp = NCP_dis_merge(less, addition_set)
+    remain_set = [t for i, t in enumerate(more.member) if i not in set(nearest_index)]
+    first_ncp, first_mid = NCP_dis_merge(less, addition_set)
+    first_ncp *= len(addition_set) + len(less.member)
     # Second method
-    second_nec = all_length * NCP_dis(less.middle, more.middle)
+    second_nec, second_mid = NCP_dis(less.middle, more.middle)
+    second_nec *= all_length
     # TODO first and second
     if first_ncp < second_nec:
-        pass
+        less.member.extend(addition_set)
+        less.middle = first_mid
+        sub_partitions.append(more)
+        more.member = remain_set
+        sub_partitions.append(more)
     else:
-        pass
+        less.member.extend(more.member)
+        less.middle = second_mid
+    sub_partitions.append(less)
     return sub_partitions
 
 
@@ -207,6 +218,9 @@ def anonymize(partition):
     Main procedure of top_down_greedy_anonymization.
     recursively partition groups until not allowable.
     """
+    if can_split is False:
+        gl_result.append(partition)
+        return
     u, v = get_pair(partition)
     sub_partitions = distribute_record(u, v, partition)
     if len(sub_partitions[0].member) < gl_K:
@@ -240,7 +254,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
         else:
             gl_QI_range.append(gl_att_trees[i]['*'].support)
             middle.append(gl_att_trees[i]['*'].value)
-    partition = Partition(data, gl_QI_range[:], middle)
+    partition = Partition(data, middle)
     anonymize(partition)
     ncp = 0.0
     for p in gl_result:
