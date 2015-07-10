@@ -31,6 +31,7 @@ class Partition:
         """
         initialize with data and middle
         """
+        self.can_split = True
         self.member = data[:]
         self.middle = middle[:]
         self.allow = [1] * gl_QI_len
@@ -200,14 +201,16 @@ def balance(sub_partitions, index):
     else:
         less.member.extend(more.member)
         less.middle = second_mid
+        less.can_split = False
     sub_partitions.append(less)
-    return sub_partitions
 
 
 def can_split(partition):
     """
     check if partition can be further splited.
     """
+    if partition.can_split is False:
+        return False
     if len(partition.member) < 2 * gl_K:
         return False
     return True
@@ -218,7 +221,7 @@ def anonymize(partition):
     Main procedure of top_down_greedy_anonymization.
     recursively partition groups until not allowable.
     """
-    if can_split is False:
+    if can_split(partition) is False:
         gl_result.append(partition)
         return
     u, v = get_pair(partition)

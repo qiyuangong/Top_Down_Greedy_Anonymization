@@ -7,6 +7,7 @@
 from models.gentree import GenTree
 from models.numrange import NumRange
 import pickle
+import pdb
 
 
 __DEBUG = False
@@ -127,7 +128,7 @@ def read_data(flag=0):
         try:
             userdata[row[2]].append(row)
         except:
-            userdata[row[2]] = row
+            userdata[row[2]] = [row]
     conditiondata = {}
     for i, line in enumerate(conditionfile):
         line = line.strip()
@@ -143,6 +144,17 @@ def read_data(flag=0):
             conditiondata[row[1]] = [row]
     hashdata = {}
     for k, v in userdata.iteritems():
+        if __DEBUG and len(v) > 1:
+            # check changes on QIDs excluding year(2003-2005)
+            for i in range(len(gl_useratt)):
+                if i == 14:
+                    continue
+                s = set()
+                for j in range(len(v)):
+                    s.add(v[j][i])
+                if len(s) > 1:
+                    print gl_useratt[i], s
+                    # pdb.set_trace()
         if k in conditiondata:
             # ingnore duplicate values
             temp = set()
@@ -151,7 +163,8 @@ def read_data(flag=0):
             hashdata[k] = []
             for i in range(len(gl_attlist)):
                 index = gl_attlist[i]
-                hashdata[k].append(v[index])
+                # we assume that QIDs are not changed in dataset
+                hashdata[k].append(v[0][index])
             stemp = list(temp)
             # sort values
             stemp.sort()
