@@ -152,8 +152,8 @@ def distribute_record(u, v, partition):
     r_v = partition.member[v][:]
     u_partition = [r_u]
     v_partition = [r_v]
-    partition.member = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
-    for t in partition.member:
+    temp = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
+    for t in temp:
         u_dis, __ = NCP_dis(r_u, t)
         v_dis, __ = NCP_dis(r_v, t)
         if u_dis > v_dis:
@@ -191,11 +191,10 @@ def balance(sub_partitions, index):
     # Second method
     second_nec, second_mid = NCP_dis(less.middle, more.middle)
     second_nec *= all_length
-    # TODO first and second
     if first_ncp < second_nec:
         less.member.extend(addition_set)
         less.middle = first_mid
-        sub_partitions.append(more)
+        sub_partitions.append(less)
         more.member = remain_set
         sub_partitions.append(more)
     else:
