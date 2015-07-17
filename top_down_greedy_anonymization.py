@@ -261,14 +261,12 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
     ncp = 0.0
     for p in gl_result:
         rncp = 0.0
-        for i in range(gl_QI_len):
-            rncp += getNormalizedWidth(p, i)
         temp = p.middle
+        rncp = NCP(temp)
         for i in range(len(p.member)):
             result.append(temp[:])
         rncp *= len(p.member)
         ncp += rncp
-    ncp /= gl_QI_len
     ncp /= len(data)
     ncp *= 100
     if __DEBUG:
