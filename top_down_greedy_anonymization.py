@@ -10,7 +10,7 @@ import random
 
 
 __DEBUG = True
-gl_QI_len = 10
+gl_QI_len = 5
 gl_K = 0
 gl_result = []
 gl_att_trees = []
@@ -37,21 +37,10 @@ class Partition:
         self.allow = [1] * gl_QI_len
 
 
-def list_to_str(value_list, cmpfun=cmp, sep=';'):
-    """covert sorted str list (sorted by cmpfun) to str
-    value (splited by sep). This fuction is value safe, which means
-    value_list will not be changed.
-    return str list.
-    """
-    temp = value_list[:]
-    temp.sort(cmp=cmpfun)
-    return sep.join(temp)
-
-
 def NCP(record):
     r_NCP = 0.0
     for i in range(gl_QI_len):
-        r_NCP += gl_att_trees[i][record[i]].support / gl_QI_range[i]
+        r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
     r_NCP /= gl_QI_len
     return r_NCP
 
@@ -97,10 +86,12 @@ def middle_group(group_set):
 
 
 def LCA(u, v, index):
-    # dict
     tree_temp = gl_att_trees[index]
+    # don't forget to add themselves (other the level will be higher)
     u_parent = list(tree_temp[u].parent)
+    u_parent.insert(0, tree_temp[u])
     v_parent = list(tree_temp[v].parent)
+    v_parent.insert(0, tree_temp[v])
     ls = min(len(u_parent), len(v_parent))
     if ls == 0:
         return '*'
