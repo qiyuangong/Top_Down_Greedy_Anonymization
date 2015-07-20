@@ -7,9 +7,10 @@ from models.numrange import NumRange
 from models.gentree import GenTree
 import operator
 import random
+import time
 
 
-__DEBUG = True
+__DEBUG = False
 gl_QI_len = 5
 gl_K = 0
 gl_result = []
@@ -231,7 +232,6 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
     For categoric values, each iterator is a split on GH.
     The final result is returned in 2-dimensional list.
     """
-    print "K=%d" % K
     global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range
     gl_att_trees = att_trees
     middle = []
@@ -248,7 +248,9 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
             gl_QI_range.append(gl_att_trees[i]['*'].support)
             middle.append(gl_att_trees[i]['*'].value)
     partition = Partition(data, middle)
+    start_time = time.time()
     anonymize(partition)
+    rtime = float(time.time() - start_time)
     ncp = 0.0
     for p in gl_result:
         rncp = 0.0
@@ -261,9 +263,11 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
     ncp /= len(data)
     ncp *= 100
     if __DEBUG:
+        print "K=%d" % K
         print "size of partitions"
         print len(gl_result)
         # print [len(t.member) for t in gl_result]
         print "NCP = %.2f %%" % ncp
+        print "Total running time = %.2f" % rtime
         # pdb.set_trace()
-    return result
+    return (result, (ncp, rtime))
