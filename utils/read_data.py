@@ -109,9 +109,9 @@ def read_tree_file(treename):
 
 
 def read_data(flag=0):
-    """read microda for *.txt and return read data
     """
-    """read microda for *.txt and return read data"""
+    read microda for *.txt and return read data
+    """
     data = []
     userfile = open('data/demographics.csv', 'rU')
     conditionfile = open('data/conditions.csv', 'rU')

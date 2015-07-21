@@ -65,7 +65,18 @@ def get_result_dataset(att_trees, data, K=10, n=10):
 
 
 def get_result_QI(att_trees, data, K=10):
-    pass
+    """
+    change nubmber of QI, whle fixing K and size of dataset
+    """
+    data_back = copy.deepcopy(data)
+    ls = len(data[0])
+    for i in reversed(range(1, ls)):
+        print '#' * 30
+        print "Number of QI=%d" % i
+        result, eval_result = Top_Down_Greedy_Anonymization(att_trees, data, K, i)
+        data = copy.deepcopy(data_back)
+        print "NCP %0.2f" % eval_result[0] + "%"
+        print "Running time %0.2f" % eval_result[1] + "seconds"
 
 
 if __name__ == '__main__':
@@ -81,7 +92,7 @@ if __name__ == '__main__':
     data = read_data()
     if flag == 'k':
         get_result_K(att_trees, data)
-    if flag == 'qi':
+    elif flag == 'qi':
         get_result_QI(att_trees, data)
     elif flag == 'data':
         get_result_dataset(att_trees, data)

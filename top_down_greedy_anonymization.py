@@ -225,7 +225,7 @@ def anonymize(partition):
         anonymize(t)
 
 
-def Top_Down_Greedy_Anonymization(att_trees, data, K):
+def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
     """Mondrian for l-diversity.
     This fuction support both numeric values and categoric values.
     For numeric values, each iterator is a mean split.
@@ -235,7 +235,10 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K):
     global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range
     gl_att_trees = att_trees
     middle = []
-    gl_QI_len = len(data[0]) - 1
+    if gl_QI_len <= 0:
+        gl_QI_len = len(data[0]) - 1
+    else:
+        gl_QI_len = QI_num
     gl_K = K
     gl_result = []
     result = []
