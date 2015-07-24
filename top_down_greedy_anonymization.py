@@ -1,6 +1,26 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+# @Article{Xu2006a,
+#   Title                    = {Utility-based Anonymization for Privacy Preservation with Less Information Loss},
+#   Author                   = {Xu, Jian and Wang, Wei and Pei, Jian and Wang, Xiaoyuan and Shi, Baile and Fu, Ada Wai-Chee},
+#   Journal                  = {SIGKDD Explor. Newsl.},
+#   Year                     = {2006},
+#   Month                    = dec,
+#   Number                   = {2},
+#   Pages                    = {21--30},
+#   Volume                   = {8},
+#   Acmid                    = {1233324},
+#   Address                  = {New York, NY, USA},
+#   Doi                      = {10.1145/1233321.1233324},
+#   File                     = {Utility-based Anonymization for Privacy Preservation with Less Information Loss.pdf:All paper\\Utility-based Anonymization for Privacy Preservation with Less Information Loss.pdf:PDF},
+#   ISSN                     = {1931-0145},
+#   Issue_date               = {December 2006},
+#   Keywords                 = {data mining, k-anonymity, local recoding, privacy preservation, utility},
+#   Numpages                 = {10},
+#   Publisher                = {ACM},
+#   Url                      = {http://doi.acm.org/10.1145/1233321.1233324}
+# }
 
 import pdb
 from models.numrange import NumRange

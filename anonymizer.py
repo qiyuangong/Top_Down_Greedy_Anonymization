@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 from top_down_greedy_anonymization import Top_Down_Greedy_Anonymization
-from utils.read_data import read_data, read_tree
+from utils.read_adult_data import read_data as read_adult
+from utils.read_informs_data import read_data as read_informs
+from utils.read_adult_data import read_tree as read_adult_tree
+from utils.read_informs_data import read_tree as read_informs_tree
 import sys, copy, random
 import pdb
 # Poulis set k=25, m=2 as default!
@@ -83,13 +86,18 @@ if __name__ == '__main__':
     flag = ''
     len_argv = len(sys.argv)
     try:
-        flag = sys.argv[1]
+        gl_data_select = sys.argv[1]
+        flag = sys.argv[2]
     except:
         pass
     K = 10
-    att_trees = read_tree()
     # read record
-    data = read_data()
+    if gl_data_select == 'i':
+        data, __ = read_informs()
+        att_trees = read_informs_tree()
+    else:
+        data, __ = read_adult()
+        att_trees = read_adult_tree()
     if flag == 'k':
         get_result_K(att_trees, data)
     elif flag == 'qi':
