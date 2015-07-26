@@ -6,11 +6,14 @@
 # 'relationship', 'race', 'sex', 'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'class']
 # QID ['age', 'workcalss', 'education', 'matrital_status', 'race', 'sex', 'native_country']
 # SA ['occopation']
+from models.gentree import GenTree
+from models.numrange import NumRange
+import pickle
 
 import pdb
 
 gl_att_names = ['age', 'workclass', 'final_weight', 'education',
-                'education_num', 'matrital_status', 'occupation', 'relationship',
+                'education_num', 'marital_status', 'occupation', 'relationship',
                 'race', 'sex', 'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'class']
 # 8 attributes are chose as QI attributes
 # age and education levels are treated as numeric attributes
@@ -18,7 +21,7 @@ gl_att_names = ['age', 'workclass', 'final_weight', 'education',
 # other categorical attributes only have 2-level generalization hierarchies.
 gl_QI_index = [0, 1, 4, 5, 6, 8, 9, 13]
 gl_is_cat = [False, True, False, True, True, True, True, True]
-gl_SA_index = 6
+gl_SA_index = -1
 
 __DEBUG = False
 
@@ -29,13 +32,11 @@ def read_data():
     """
     QI_num = len(gl_QI_index)
     data = []
+    numeric_dict = []
+    for i in range(QI_num):
+        numeric_dict.append(dict())
     # oder categorical attributes in intuitive order
     # here, we use the appear number
-    intuitive_order = []
-    intuitive_number = []
-    for i in range(QI_num):
-        intuitive_order.append(dict())
-        intuitive_number.append(0)
     data_file = open('data/adult.data', 'rU')
     for line in data_file:
         line = line.strip()
@@ -49,15 +50,83 @@ def read_data():
         ltemp = []
         for i in range(QI_num):
             index = gl_QI_index[i]
-            if gl_is_cat[i]:
+            if gl_is_cat[i] == False:
                 try:
-                    ltemp.append(intuitive_order[i][temp[index]])
+                    numeric_dict[i][temp[index]] += 1
                 except:
-                    intuitive_order[i][temp[index]] = intuitive_number[i]
-                    ltemp.append(intuitive_number[i])
-                    intuitive_number[i] += 1
-            else:
-                ltemp.append(int(temp[index]))
+                    numeric_dict[i][temp[index]] = 1
+            ltemp.append(temp[index])
         ltemp.append(temp[gl_SA_index])
         data.append(ltemp)
-    return (data, intuitive_order)
+    # pickle numeric attributes and get NumRange
+    for i in range(QI_num):
+        if gl_is_cat[i] == False:
+            static_file = open('data/adult_' + gl_att_names[gl_QI_index[i]] + '_static.pickle', 'wb')
+            sort_value = list(numeric_dict[i].keys())
+            pickle.dump((numeric_dict[i], sort_value), static_file)
+            static_file.close()
+    return data
+
+
+def read_tree():
+    """read tree from data/tree_*.txt, store them in att_tree
+    """
+    att_names = []
+    att_trees = []
+    for t in gl_QI_index:
+        att_names.append(gl_att_names[t])
+    for i in range(len(att_names)):
+        if gl_is_cat[i]:
+            att_trees.append(read_tree_file(att_names[i]))
+        else:
+            att_trees.append(read_pickle_file(att_names[i]))
+    return att_trees
+
+
+def read_pickle_file(att_name):
+    """
+    read pickle file for numeric attributes
+    return numrange object
+    """
+    try:
+        static_file = open('data/adult_' + att_name + '_static.pickle', 'rb')
+        (numeric_dict, sort_value) = pickle.load(static_file)
+    except:
+        print "Pickle file not exists!!"
+    static_file.close()
+    result = NumRange(sort_value, numeric_dict)
+    return result
+
+
+def read_tree_file(treename):
+    """read tree data from treename
+    """
+    leaf_to_path = {}
+    att_tree = {}
+    prefix = 'data/adult_'
+    postfix = ".txt"
+    treefile = open(prefix + treename + postfix, 'rU')
+    att_tree['*'] = GenTree('*')
+    if __DEBUG:
+        print "Reading Tree" + treename
+    for line in treefile:
+        # delete \n
+        if len(line) <= 1:
+            break
+        line = line.strip()
+        temp = line.split(';')
+        # copy temp
+        temp.reverse()
+        for i, t in enumerate(temp):
+            isleaf = False
+            if i == len(temp) - 1:
+                isleaf = True
+            # try and except is more efficient than 'in'
+            try:
+                att_tree[t]
+            except:
+                att_tree[t] = GenTree(t, att_tree[temp[i - 1]], isleaf)
+    if __DEBUG:
+        print "Nodes No. = %d" % att_tree['*'].support
+    treefile.close()
+    return att_tree

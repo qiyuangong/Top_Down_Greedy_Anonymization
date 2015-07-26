@@ -11,13 +11,13 @@ import pdb
 
 
 __DEBUG = False
-gl_useratt = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
-              'RACEX', 'RACEAX', 'RACEBX', 'RACEWX', 'RACETHNX',
-              'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
-gl_conditionatt = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
+gl_user_att = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
+               'RACEX', 'RACEAX', 'RACEBX', 'RACEWX', 'RACETHNX',
+               'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
+gl_condition_att = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
-gl_attlist = [3, 4, 6, 13, 16]
-gl_if_cat = [True, True, True, True, True]
+gl_att_list = [3, 4, 6, 13, 16]
+gl_is_cat = [True, True, True, True, True]
 
 
 def cmp_str(element1, element2):
@@ -31,46 +31,28 @@ def read_tree():
     """
     att_names = []
     att_trees = []
-    for t in gl_attlist:
-        att_names.append(gl_useratt[t])
+    for t in gl_att_list:
+        att_names.append(gl_user_att[t])
     for i in range(len(att_names)):
-        if gl_if_cat[i]:
+        if gl_is_cat[i]:
             att_trees.append(read_tree_file(att_names[i]))
         else:
-            att_trees.append(pickle_static(gl_attlist[i]))
+            att_trees.append(read_pickle_file(att_names[i]))
     return att_trees
 
 
-def pickle_static(index):
-    """pickle sorted values of BMS-WebView-2 to BMS_Static_value.pickle
+def read_pickle_file(att_name):
     """
-    userfile = open('data/demographics.csv', 'rU')
-    need_static = False
-    support = {}
+    read pickle file for numeric attributes
+    return numrange object
+    """
     try:
-        static_file = open('data/income_Static_value.pickle', 'rb')
-        print "Data exist..."
-        (support, sort_value) = pickle.load(static_file)
+        static_file = open('data/adult_' + att_name + '_static.pickle', 'rb')
+        (numeric_dict, sort_value) = pickle.load(static_file)
     except:
-        need_static = True
-        static_file = open('data/income_Static_value.pickle', 'wb')
-        print "Pickle Data..."
-        for i, line in enumerate(userfile):
-            line = line.strip()
-            if i == 0:
-                continue
-            # ignore first line of csv
-            row = line.split(',')
-            try:
-                support[row[index]] += 1
-            except:
-                support[row[index]] = 1
-        sort_value = support.keys()
-        sort_value.sort(cmp=cmp_str)
-        pickle.dump((support, sort_value), static_file)
+        print "Pickle file not exists!!"
     static_file.close()
-    userfile.close()
-    result = NumRange(sort_value, support)
+    result = NumRange(sort_value, numeric_dict)
     return result
 
 
@@ -116,6 +98,9 @@ def read_data(flag=0):
     userfile = open('data/demographics.csv', 'rU')
     conditionfile = open('data/conditions.csv', 'rU')
     userdata = {}
+    numeric_dict = []
+    for i in range(gl_att_list):
+        numeric_dict.append(dict())
     # We selet 3,4,5,6,13,15,15 att from demographics05, and 2 from condition05
     print "Reading Data..."
     for i, line in enumerate(userfile):
@@ -142,18 +127,26 @@ def read_data(flag=0):
             conditiondata[row[1]].append(row)
         except:
             conditiondata[row[1]] = [row]
+        for i in range(len(gl_att_list)):
+            index = gl_att_list[i]
+            if gl_is_cat[i] == False:
+                try:
+                    numeric_dict[i][row[index]] += 1
+                except:
+                    numeric_dict[i][row[index]] = 1
     hashdata = {}
     for k, v in userdata.iteritems():
         if __DEBUG and len(v) > 1:
             # check changes on QIDs excluding year(2003-2005)
-            for i in range(len(gl_useratt)):
+            for i in range(len(gl_user_att)):
+                # year index = 14
                 if i == 14:
                     continue
                 s = set()
                 for j in range(len(v)):
                     s.add(v[j][i])
                 if len(s) > 1:
-                    print gl_useratt[i], s
+                    print gl_user_att[i], s
                     # pdb.set_trace()
         if k in conditiondata:
             # ingnore duplicate values
@@ -161,8 +154,8 @@ def read_data(flag=0):
             for t in conditiondata[k]:
                 temp.add(t[2])
             hashdata[k] = []
-            for i in range(len(gl_attlist)):
-                index = gl_attlist[i]
+            for i in range(len(gl_att_list)):
+                index = gl_att_list[i]
                 # we assume that QIDs are not changed in dataset
                 hashdata[k].append(v[0][index])
             stemp = list(temp)
@@ -171,6 +164,13 @@ def read_data(flag=0):
             hashdata[k].append(stemp[:])
     for k, v in hashdata.iteritems():
         data.append(v)
+    for i in range(len(gl_att_list)):
+        if gl_is_cat[i] == False:
+            static_file = open('data/informs_' + gl_att_names[gl_att_list[i]] + '_static.pickle', 'wb')
+            sort_value = list(numeric_dict[i].keys())
+            pickle.dump((numeric_dict[i], sort_value), static_file)
+            static_file.close()
+
     userfile.close()
     conditionfile.close()
     return data
