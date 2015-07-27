@@ -16,7 +16,7 @@ gl_user_att = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
                'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
 gl_condition_att = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
-gl_att_list = [3, 4, 6, 13, 16]
+gl_QI_index = [3, 4, 6, 13, 16]
 gl_is_cat = [True, True, True, True, True]
 
 
@@ -31,7 +31,7 @@ def read_tree():
     """
     att_names = []
     att_trees = []
-    for t in gl_att_list:
+    for t in gl_QI_index:
         att_names.append(gl_user_att[t])
     for i in range(len(att_names)):
         if gl_is_cat[i]:
@@ -47,13 +47,13 @@ def read_pickle_file(att_name):
     return numrange object
     """
     try:
-        static_file = open('data/adult_' + att_name + '_static.pickle', 'rb')
+        static_file = open('data/informs_' + att_name + '_static.pickle', 'rb')
         (numeric_dict, sort_value) = pickle.load(static_file)
+        static_file.close()
+        result = NumRange(sort_value, numeric_dict)
+        return result
     except:
         print "Pickle file not exists!!"
-    static_file.close()
-    result = NumRange(sort_value, numeric_dict)
-    return result
 
 
 def read_tree_file(treename):
@@ -99,10 +99,12 @@ def read_data(flag=0):
     conditionfile = open('data/conditions.csv', 'rU')
     userdata = {}
     numeric_dict = []
-    for i in range(gl_att_list):
+    QI_num = len(gl_QI_index)
+    for i in range(QI_num):
         numeric_dict.append(dict())
     # We selet 3,4,5,6,13,15,15 att from demographics05, and 2 from condition05
-    print "Reading Data..."
+    if __DEBUG:
+        print "Reading Data..."
     for i, line in enumerate(userfile):
         line = line.strip()
         # ignore first line of csv
@@ -114,6 +116,13 @@ def read_data(flag=0):
             userdata[row[2]].append(row)
         except:
             userdata[row[2]] = [row]
+        for j in range(QI_num):
+            index = gl_QI_index[j]
+            if gl_is_cat[j] == False:
+                try:
+                    numeric_dict[j][row[index]] += 1
+                except:
+                    numeric_dict[j][row[index]] = 1
     conditiondata = {}
     for i, line in enumerate(conditionfile):
         line = line.strip()
@@ -127,18 +136,11 @@ def read_data(flag=0):
             conditiondata[row[1]].append(row)
         except:
             conditiondata[row[1]] = [row]
-        for i in range(len(gl_att_list)):
-            index = gl_att_list[i]
-            if gl_is_cat[i] == False:
-                try:
-                    numeric_dict[i][row[index]] += 1
-                except:
-                    numeric_dict[i][row[index]] = 1
     hashdata = {}
     for k, v in userdata.iteritems():
         if __DEBUG and len(v) > 1:
             # check changes on QIDs excluding year(2003-2005)
-            for i in range(len(gl_user_att)):
+            for i in range(QI_num):
                 # year index = 14
                 if i == 14:
                     continue
@@ -154,8 +156,8 @@ def read_data(flag=0):
             for t in conditiondata[k]:
                 temp.add(t[2])
             hashdata[k] = []
-            for i in range(len(gl_att_list)):
-                index = gl_att_list[i]
+            for i in range(QI_num):
+                index = gl_QI_index[i]
                 # we assume that QIDs are not changed in dataset
                 hashdata[k].append(v[0][index])
             stemp = list(temp)
@@ -164,13 +166,13 @@ def read_data(flag=0):
             hashdata[k].append(stemp[:])
     for k, v in hashdata.iteritems():
         data.append(v)
-    for i in range(len(gl_att_list)):
+    for i in range(QI_num):
         if gl_is_cat[i] == False:
-            static_file = open('data/informs_' + gl_att_names[gl_att_list[i]] + '_static.pickle', 'wb')
+            static_file = open('data/informs_' + gl_user_att[gl_QI_index[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
+            sort_value.sort(cmp=cmp_str)
             pickle.dump((numeric_dict[i], sort_value), static_file)
             static_file.close()
-
     userfile.close()
     conditionfile.close()
     return data

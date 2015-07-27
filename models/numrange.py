@@ -16,6 +16,7 @@ class NumRange(object):
     def __init__(self, sort_value, support):
         self.sort_value = sort_value[:]
         self.support = support.copy()
+        # TODO
         self.range = len(sort_value)
         self.dict = {}
         for i, v in enumerate(sort_value):

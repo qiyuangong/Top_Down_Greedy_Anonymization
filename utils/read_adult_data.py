@@ -26,6 +26,12 @@ gl_SA_index = -1
 __DEBUG = False
 
 
+def cmp_str(element1, element2):
+    """compare number in str format correctley
+    """
+    return cmp(int(element1), int(element2))
+
+
 def read_data():
     """
     read microda for *.txt and return read data
@@ -63,6 +69,7 @@ def read_data():
         if gl_is_cat[i] == False:
             static_file = open('data/adult_' + gl_att_names[gl_QI_index[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
+            sort_value.sort(cmp=cmp_str)
             pickle.dump((numeric_dict[i], sort_value), static_file)
             static_file.close()
     return data

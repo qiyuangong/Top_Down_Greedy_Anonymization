@@ -245,6 +245,21 @@ def anonymize(partition):
         anonymize(t)
 
 
+def init(att_trees, data, K, QI_num=-1):
+    """
+    reset all gloabl variables
+    """
+    global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range
+    gl_att_trees = att_trees
+    if QI_num <= 0:
+        gl_QI_len = len(data[0]) - 1
+    else:
+        gl_QI_len = QI_num
+    gl_K = K
+    gl_result = []
+    gl_QI_range = []
+
+
 def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
     """Mondrian for l-diversity.
     This fuction support both numeric values and categoric values.
@@ -252,17 +267,9 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
     For categoric values, each iterator is a split on GH.
     The final result is returned in 2-dimensional list.
     """
-    global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range
-    gl_att_trees = att_trees
-    middle = []
-    if gl_QI_len <= 0:
-        gl_QI_len = len(data[0]) - 1
-    else:
-        gl_QI_len = QI_num
-    gl_K = K
-    gl_result = []
+    init(att_trees, data, K, QI_num)
     result = []
-    gl_QI_range = []
+    middle = []
     for i in range(gl_QI_len):
         if isinstance(gl_att_trees[i], NumRange):
             gl_QI_range.append(gl_att_trees[i].range)
@@ -270,6 +277,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
         else:
             gl_QI_range.append(gl_att_trees[i]['*'].support)
             middle.append(gl_att_trees[i]['*'].value)
+    # pdb.set_trace()
     partition = Partition(data, middle)
     start_time = time.time()
     anonymize(partition)
@@ -292,5 +300,4 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
         # print [len(t.member) for t in gl_result]
         print "NCP = %.2f %%" % ncp
         print "Total running time = %.2f" % rtime
-        # pdb.set_trace()
     return (result, (ncp, rtime))

@@ -9,6 +9,8 @@ import sys, copy, random
 import pdb
 # Poulis set k=25, m=2 as default!
 
+gl_data_select = 'a'
+
 
 def get_result_one(att_trees, data, K=10):
     "run Top_Down_Greedy_Anonymization for one time, with k=10"
@@ -17,9 +19,7 @@ def get_result_one(att_trees, data, K=10):
     else:
         print "INFORMS data"
     print "K=%d" % K
-    data_back = copy.deepcopy(data)
     result, eval_result = Top_Down_Greedy_Anonymization(att_trees, data, K)
-    data = copy.deepcopy(data_back)
     print "NCP %0.2f" % eval_result[0] + "%"
     print "Running time %0.2f" % eval_result[1] + "seconds"
 
@@ -121,14 +121,14 @@ if __name__ == '__main__':
     elif flag == 'data':
         get_result_dataset(att_trees, data)
     elif flag == 'one':
-        if len_argv > 2:
-            K = int(sys.argv[2])
+        if len_argv > 3:
+            K = int(sys.argv[3])
             get_result_one(att_trees, data, K)
         else:
             get_result_one(att_trees, data)
     elif flag == '':
         get_result_one(att_trees, data)
     else:
-        print "Usage: python anonymizer [k | qi |data | one]"
+        print "Usage: python anonymizer [k | qi | data | one]"
     # anonymized dataset is stored in result
     print "Finish Top_Down_Greedy_Anonymization!!"
