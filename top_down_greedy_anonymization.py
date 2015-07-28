@@ -37,6 +37,7 @@ gl_result = []
 gl_att_trees = []
 gl_QI_range = []
 gl_rounds = 3
+gl_is_cat = []
 
 
 class Partition:
@@ -107,6 +108,9 @@ def middle_group(group_set):
 
 
 def LCA(u, v, index):
+    """
+    get lowest common ancestor of u, v on generalization hierarchy (index)
+    """
     tree_temp = gl_att_trees[index]
     # don't forget to add themselves (other the level will be higher)
     u_parent = list(tree_temp[u].parent)
@@ -128,7 +132,7 @@ def get_pair(partition):
     """
     To get max distance pair in partition, we need O(n^2) running time.
     The author proposed a heuristic method: random pick u and get max_dis(u, v)
-    with O(n) running tiem; then pick max(v, U2)...after run gl_rounds times.
+    with O(n) running tiem; then pick max(v, u2)...after run gl_rounds times.
     the dis(u, v) is nearly max.
     """
     ls = len(partition.member)
@@ -137,7 +141,7 @@ def get_pair(partition):
             u = random.randrange(ls)
         else:
             u = v
-        max_dis = 0
+        max_dis = -1
         max_index = 0
         for i in range(ls):
             if i != u:
@@ -150,7 +154,8 @@ def get_pair(partition):
 
 
 def cmp_str(element1, element2):
-    """compare number in str format correctley
+    """
+    compare number in str format correctley
     """
     return cmp(int(element1), int(element2))
 
@@ -192,10 +197,10 @@ def balance(sub_partitions, index):
     dist = {}
     for i, t in enumerate(more.member):
         dist[i], __ = NCP_dis(less.middle, t)
+
     sorted_dist = sorted(dist.iteritems(),
                          key=operator.itemgetter(1))
-    nearest_index = [t[0] for t in sorted_dist]
-    nearest_index = nearest_index[:require]
+    nearest_index = [t[0] for t in sorted_dist[:require]]
     addition_set = [t for i, t in enumerate(more.member) if i in set(nearest_index)]
     remain_set = [t for i, t in enumerate(more.member) if i not in set(nearest_index)]
     first_ncp, first_mid = NCP_dis_merge(less, addition_set)
@@ -206,8 +211,8 @@ def balance(sub_partitions, index):
     if first_ncp < second_nec:
         less.member.extend(addition_set)
         less.middle = first_mid
-        sub_partitions.append(less)
         more.member = remain_set
+        more.middle = middle_group(remain_set)
         sub_partitions.append(more)
     else:
         less.member.extend(more.member)
@@ -249,7 +254,7 @@ def init(att_trees, data, K, QI_num=-1):
     """
     reset all gloabl variables
     """
-    global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range
+    global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range, gl_is_cat
     gl_att_trees = att_trees
     if QI_num <= 0:
         gl_QI_len = len(data[0]) - 1
@@ -258,26 +263,28 @@ def init(att_trees, data, K, QI_num=-1):
     gl_K = K
     gl_result = []
     gl_QI_range = []
+    for i in range(gl_QI_len):
+        if isinstance(gl_att_trees[i], NumRange):
+            gl_is_cat.append(False)
+        else:
+            gl_is_cat.append(True)
 
 
 def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
-    """Mondrian for l-diversity.
-    This fuction support both numeric values and categoric values.
-    For numeric values, each iterator is a mean split.
-    For categoric values, each iterator is a split on GH.
-    The final result is returned in 2-dimensional list.
+    """
+    Top Down Greedy Anonymization is a heuristic algorithm
+    for relational dataset with numeric and categorical attbitues
     """
     init(att_trees, data, K, QI_num)
     result = []
     middle = []
     for i in range(gl_QI_len):
-        if isinstance(gl_att_trees[i], NumRange):
+        if gl_is_cat is False:
             gl_QI_range.append(gl_att_trees[i].range)
             middle.append(gl_att_trees[i].value)
         else:
             gl_QI_range.append(gl_att_trees[i]['*'].support)
             middle.append(gl_att_trees[i]['*'].value)
-    # pdb.set_trace()
     partition = Partition(data, middle)
     start_time = time.time()
     anonymize(partition)
@@ -297,7 +304,6 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
         print "K=%d" % K
         print "size of partitions"
         print len(gl_result)
-        # print [len(t.member) for t in gl_result]
         print "NCP = %.2f %%" % ncp
         print "Total running time = %.2f" % rtime
     return (result, (ncp, rtime))
