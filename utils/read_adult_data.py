@@ -8,6 +8,7 @@
 # SA ['occopation']
 from models.gentree import GenTree
 from models.numrange import NumRange
+from utils.utility import cmp_str
 import pickle
 
 import pdb
@@ -24,12 +25,6 @@ gl_is_cat = [False, True, False, True, True, True, True, True]
 gl_SA_index = -1
 
 __DEBUG = False
-
-
-def cmp_str(element1, element2):
-    """compare number in str format correctley
-    """
-    return cmp(int(element1), int(element2))
 
 
 def read_data():

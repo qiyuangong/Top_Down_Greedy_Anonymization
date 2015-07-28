@@ -17,13 +17,7 @@ gl_user_att = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
 gl_condition_att = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
 gl_QI_index = [3, 4, 6, 13, 16]
-gl_is_cat = [True, True, True, True, True]
-
-
-def cmp_str(element1, element2):
-    """compare number in str format correctley
-    """
-    return cmp(int(element1), int(element2))
+gl_is_cat = [True, True, True, True, False]
 
 
 def read_tree():
@@ -118,7 +112,7 @@ def read_data(flag=0):
             userdata[row[2]] = [row]
         for j in range(QI_num):
             index = gl_QI_index[j]
-            if gl_is_cat[j] == False:
+            if gl_is_cat[j] is False:
                 try:
                     numeric_dict[j][row[index]] += 1
                 except:
@@ -167,7 +161,7 @@ def read_data(flag=0):
     for k, v in hashdata.iteritems():
         data.append(v)
     for i in range(QI_num):
-        if gl_is_cat[i] == False:
+        if gl_is_cat[i] is False:
             static_file = open('data/informs_' + gl_user_att[gl_QI_index[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
             sort_value.sort(cmp=cmp_str)

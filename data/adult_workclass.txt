@@ -1,6 +1,6 @@
 Private;*
-Self-employ-not-inc;Self-employ;*
-Self-employ-inc;Self-employ;*
+Self-emp-not-inc;Self-employ;*
+Self-emp-inc;Self-employ;*
 Federal-gov;gov;*
 Local-gov;gov;*
 State-gov;gov;*

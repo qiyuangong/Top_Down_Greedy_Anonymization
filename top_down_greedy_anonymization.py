@@ -25,6 +25,7 @@
 import pdb
 from models.numrange import NumRange
 from models.gentree import GenTree
+from utils.utility import cmp_str
 import operator
 import random
 import time
@@ -62,7 +63,16 @@ class Partition:
 def NCP(record):
     r_NCP = 0.0
     for i in range(gl_QI_len):
-        r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
+        if gl_is_cat[i] is False:
+            temp = 0
+            try:
+                float(record[i])
+            except:
+                stemp = record[i].split(',')
+                temp = float(stemp[1]) - float(stemp[0])
+            r_NCP += temp * 1.0 / gl_QI_range[i]
+        else:
+            r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
     r_NCP /= gl_QI_len
     return r_NCP
 
@@ -95,7 +105,22 @@ def middle_record(record1, record2):
     """
     mid = []
     for i in range(gl_QI_len):
-        mid.append(LCA(record1[i], record2[i], i))
+        if gl_is_cat[i] is False:
+            temp = []
+            try:
+                float(record1[i])
+                temp.append(record1[i])
+            except:
+                temp.extend(record1[i].split(','))
+            try:
+                float(record2[i])
+                temp.append(record2[i])
+            except:
+                temp.extend(record2[i].split(','))
+            temp.sort(cmp=cmp_str)
+            mid.append(temp[0] + ',' + temp[-1])
+        else:
+            mid.append(LCA(record1[i], record2[i], i))
     return mid
 
 
@@ -246,6 +271,13 @@ def anonymize(partition):
         balance(sub_partitions, 0)
     elif len(sub_partitions[1].member) < gl_K:
         balance(sub_partitions, 1)
+    # watch dog
+    p_sum = len(partition.member)
+    c_sum = 0
+    for t in sub_partitions:
+        c_sum += len(t.member)
+    if p_sum != c_sum:
+        pdb.set_trace()
     for t in sub_partitions:
         anonymize(t)
 
@@ -279,7 +311,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
     result = []
     middle = []
     for i in range(gl_QI_len):
-        if gl_is_cat is False:
+        if gl_is_cat[i] is False:
             gl_QI_range.append(gl_att_trees[i].range)
             middle.append(gl_att_trees[i].value)
         else:
