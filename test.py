@@ -3,12 +3,14 @@ import unittest
 from top_down_greedy_anonymization import Top_Down_Greedy_Anonymization, Partition
 from utils.read_data import read_data, read_tree
 from models.gentree import GenTree
+from models.numrange import NumRange
+from utils.utility import cmp_str
 import random
 
 gl_K = 10
 gl_rounds = 3
 gl_QI_len = 5
-gl_QI_range = [10, 10, 10, 10, 10]
+gl_QI_range = [10, 10, 10, 10, 9]
 # Build a GenTree object
 gl_tree_temp = {}
 tree = GenTree('*')
@@ -23,26 +25,40 @@ for i in range(1, 11):
     else:
         t = GenTree(str(i), rt, True)
     gl_tree_temp[str(i)] = t
+gl_att_trees = [gl_tree_temp, gl_tree_temp, gl_tree_temp, gl_tree_temp, NumRange([str(t) for t in range(1, 11)], dict())]
+gl_is_cat = [True, True, True, True, False]
 
 
 def NCP(record):
     r_NCP = 0.0
     for i in range(gl_QI_len):
-        r_NCP += gl_tree_temp[record[i]].support * 1.0 / gl_QI_range[i]
+        if gl_is_cat[i] is False:
+            temp = 0
+            try:
+                float(record[i])
+            except:
+                stemp = record[i].split(',')
+                temp = float(stemp[1]) - float(stemp[0])
+            r_NCP += temp * 1.0 / gl_QI_range[i]
+        else:
+            r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
     r_NCP /= gl_QI_len
     return r_NCP
 
 
-def LCA(u, v):
-    # dict
-    u_parent = list(gl_tree_temp[u].parent)
-    u_parent.insert(0, gl_tree_temp[u])
-    v_parent = list(gl_tree_temp[v].parent)
-    v_parent.insert(0, gl_tree_temp[v])
+def LCA(u, v, index):
+    """
+    get lowest common ancestor of u, v on generalization hierarchy (index)
+    """
+    tree_temp = gl_att_trees[index]
+    # don't forget to add themselves (other the level will be higher)
+    u_parent = list(tree_temp[u].parent)
+    u_parent.insert(0, tree_temp[u])
+    v_parent = list(tree_temp[v].parent)
+    v_parent.insert(0, tree_temp[v])
     ls = min(len(u_parent), len(v_parent))
     if ls == 0:
         return '*'
-    last = 0
     for i in range(ls):
         pos = - 1 - i
         if u_parent[pos] != v_parent[pos]:
@@ -87,36 +103,43 @@ def middle_record(record1, record2):
     """
     mid = []
     for i in range(gl_QI_len):
-        mid.append(LCA(record1[i], record2[i]))
+        if gl_is_cat[i] is False:
+            temp = []
+            try:
+                float(record1[i])
+                temp.append(record1[i])
+            except:
+                temp.extend(record1[i].split(','))
+            try:
+                float(record2[i])
+                temp.append(record2[i])
+            except:
+                temp.extend(record2[i].split(','))
+            temp.sort(cmp=cmp_str)
+            mid.append(temp[0] + ',' + temp[-1])
+        else:
+            mid.append(LCA(record1[i], record2[i], i))
     return mid
-
-# class SizeTest(unittest.TestCase):
-
-#     def test_subSize(self):
-#         ls = len(data)
-#         for i in range(2, 11):
-#             with self.assertRaises(Exception):
-#                 Top_Down_Greedy_Anonymization(gl_att_trees, data[0: ls / i], gl_K)
 
 
 class functionTest(unittest.TestCase):
     def test_LCA_equal(self):
         v1 = '1'
         v2 = '1'
-        self.assertEqual(LCA(v1, v2), '1')
+        self.assertEqual(LCA(v1, v2, 1), '1')
 
     def test_LCA_not_equal(self):
         v1 = '1'
         v2 = '6'
-        self.assertEqual(LCA(v1, v2), '*')
+        self.assertEqual(LCA(v1, v2, 1), '*')
 
     def test_LCA_with_top(self):
         v1 = '*'
         v2 = '6'
-        self.assertEqual(LCA(v1, v2), '*')
+        self.assertEqual(LCA(v1, v2, 1), '*')
 
     def test_NCP_with_top_value(self):
-        nothing = ['*', '*', '*', '*', '*']
+        nothing = ['*', '*', '*', '*', '1,10']
         self.assertEqual(NCP(nothing), 1)
 
     def test_NCP_with_examples(self):

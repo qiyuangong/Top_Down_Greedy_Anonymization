@@ -25,7 +25,7 @@
 import pdb
 from models.numrange import NumRange
 from models.gentree import GenTree
-from utils.utility import cmp_str
+from utils.utility import cmp_str, get_num_list_from_str
 import operator
 import random
 import time
@@ -43,7 +43,8 @@ gl_is_cat = []
 
 class Partition:
 
-    """Class for Group, which is used to keep records
+    """
+    Class for Group, which is used to keep records
     Store tree node in instances.
     self.member: records in group
     self.middle: save the generalization result of this partition
@@ -61,6 +62,9 @@ class Partition:
 
 
 def NCP(record):
+    """
+    compute Certainlty Penalty of records
+    """
     r_NCP = 0.0
     for i in range(gl_QI_len):
         if gl_is_cat[i] is False:
@@ -73,7 +77,6 @@ def NCP(record):
             r_NCP += temp * 1.0 / gl_QI_range[i]
         else:
             r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
-    r_NCP /= gl_QI_len
     return r_NCP
 
 
@@ -107,16 +110,8 @@ def middle_record(record1, record2):
     for i in range(gl_QI_len):
         if gl_is_cat[i] is False:
             temp = []
-            try:
-                float(record1[i])
-                temp.append(record1[i])
-            except:
-                temp.extend(record1[i].split(','))
-            try:
-                float(record2[i])
-                temp.append(record2[i])
-            except:
-                temp.extend(record2[i].split(','))
+            temp.extend(get_num_list_from_str(record1[i]))
+            temp.extend(get_num_list_from_str(record2[i]))
             temp.sort(cmp=cmp_str)
             mid.append(temp[0] + ',' + temp[-1])
         else:
@@ -230,14 +225,16 @@ def balance(sub_partitions, index):
     remain_set = [t for i, t in enumerate(more.member) if i not in set(nearest_index)]
     first_ncp, first_mid = NCP_dis_merge(less, addition_set)
     first_ncp *= len(addition_set) + len(less.member)
+    r_middle = middle_group(remain_set)
+    first_ncp += len(remain_set) * NCP(r_middle)
     # Second method
     second_nec, second_mid = NCP_dis(less.middle, more.middle)
     second_nec *= all_length
-    if first_ncp < second_nec:
+    if first_ncp <= second_nec:
         less.member.extend(addition_set)
         less.middle = first_mid
         more.member = remain_set
-        more.middle = middle_group(remain_set)
+        more.middle = r_middle
         sub_partitions.append(more)
     else:
         less.member.extend(more.member)
@@ -330,8 +327,10 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
             result.append(temp[:])
         rncp *= len(p.member)
         ncp += rncp
-    ncp /= len(data)
-    ncp *= 100
+    # covert NCP to percentage
+    # ncp /= len(data)
+    # ncp / = gl_QI_len
+    # ncp *= 100
     if __DEBUG:
         print "K=%d" % K
         print "size of partitions"

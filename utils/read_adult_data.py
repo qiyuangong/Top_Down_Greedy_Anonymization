@@ -51,7 +51,7 @@ def read_data():
         ltemp = []
         for i in range(QI_num):
             index = gl_QI_index[i]
-            if gl_is_cat[i] == False:
+            if gl_is_cat[i] is False:
                 try:
                     numeric_dict[i][temp[index]] += 1
                 except:
@@ -61,7 +61,7 @@ def read_data():
         data.append(ltemp)
     # pickle numeric attributes and get NumRange
     for i in range(QI_num):
-        if gl_is_cat[i] == False:
+        if gl_is_cat[i] is False:
             static_file = open('data/adult_' + gl_att_names[gl_QI_index[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
             sort_value.sort(cmp=cmp_str)

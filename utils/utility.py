@@ -6,3 +6,16 @@ def cmp_str(element1, element2):
     """compare number in str format correctley
     """
     return cmp(int(element1), int(element2))
+
+
+def get_num_list_from_str(stemp):
+    """
+    if float(stemp) works, return [stemp]
+    else return, stemp.split(',')
+
+    """
+    try:
+        float(stemp)
+        return [stemp]
+    except:
+        return stemp.split(',')

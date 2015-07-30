@@ -6,6 +6,7 @@
 # condition att ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 from models.gentree import GenTree
 from models.numrange import NumRange
+from utils.utility import cmp_str
 import pickle
 import pdb
 
