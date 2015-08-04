@@ -59,6 +59,7 @@ def LCA(u, v, index):
     ls = min(len(u_parent), len(v_parent))
     if ls == 0:
         return '*'
+    last = -1
     for i in range(ls):
         pos = - 1 - i
         if u_parent[pos] != v_parent[pos]:

@@ -7,7 +7,6 @@ from utils.read_adult_data import read_tree as read_adult_tree
 from utils.read_informs_data import read_tree as read_informs_tree
 import sys, copy, random
 import pdb
-# Poulis set k=25, m=2 as default!
 
 gl_data_select = 'a'
 
@@ -29,7 +28,7 @@ def get_result_K(att_trees, data):
     change K, whle fixing QD and size of dataset
     """
     data_back = copy.deepcopy(data)
-    for K in range(5, 55, 5):
+    for K in range(5, 105, 5):
         print '#' * 30
         if gl_data_select == 'a':
             print "Adult data"

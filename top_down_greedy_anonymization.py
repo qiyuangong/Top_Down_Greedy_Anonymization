@@ -120,6 +120,9 @@ def middle_record(record1, record2):
 
 
 def middle_group(group_set):
+    """
+    get the generalization result of the group
+    """
     ls = len(group_set)
     mid = group_set[0]
     for i in range(1, ls):
@@ -140,6 +143,7 @@ def LCA(u, v, index):
     ls = min(len(u_parent), len(v_parent))
     if ls == 0:
         return '*'
+    last = -1
     for i in range(ls):
         pos = - 1 - i
         if u_parent[pos] != v_parent[pos]:
@@ -228,9 +232,9 @@ def balance(sub_partitions, index):
     r_middle = middle_group(remain_set)
     first_ncp += len(remain_set) * NCP(r_middle)
     # Second method
-    second_nec, second_mid = NCP_dis(less.middle, more.middle)
-    second_nec *= all_length
-    if first_ncp <= second_nec:
+    second_ncp, second_mid = NCP_dis(less.middle, more.middle)
+    second_ncp *= all_length
+    if first_ncp <= second_ncp:
         less.member.extend(addition_set)
         less.middle = first_mid
         more.member = remain_set
@@ -328,9 +332,9 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
         rncp *= len(p.member)
         ncp += rncp
     # covert NCP to percentage
-    # ncp /= len(data)
-    # ncp / = gl_QI_len
-    # ncp *= 100
+    ncp /= len(data)
+    ncp /= gl_QI_len
+    ncp *= 100
     if __DEBUG:
         print "K=%d" % K
         print "size of partitions"
