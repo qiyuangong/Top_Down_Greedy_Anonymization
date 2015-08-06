@@ -12,13 +12,13 @@ import pdb
 
 
 __DEBUG = False
-gl_user_att = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
+USER_ATT = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
                'RACEX', 'RACEAX', 'RACEBX', 'RACEWX', 'RACETHNX',
                'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
-gl_condition_att = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
+CONDITION_ATT = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
-gl_QI_index = [3, 4, 6, 13, 16]
-gl_is_cat = [True, True, True, True, False]
+QI_INDEX = [3, 4, 6, 13, 16]
+IS_CAT = [True, True, True, True, False]
 
 
 def read_tree():
@@ -26,10 +26,10 @@ def read_tree():
     """
     att_names = []
     att_trees = []
-    for t in gl_QI_index:
-        att_names.append(gl_user_att[t])
+    for t in QI_INDEX:
+        att_names.append(USER_ATT[t])
     for i in range(len(att_names)):
-        if gl_is_cat[i]:
+        if IS_CAT[i]:
             att_trees.append(read_tree_file(att_names[i]))
         else:
             att_trees.append(read_pickle_file(att_names[i]))
@@ -94,7 +94,7 @@ def read_data(flag=0):
     conditionfile = open('data/conditions.csv', 'rU')
     userdata = {}
     numeric_dict = []
-    QI_num = len(gl_QI_index)
+    QI_num = len(QI_INDEX)
     for i in range(QI_num):
         numeric_dict.append(dict())
     # We selet 3,4,5,6,13,15,15 att from demographics05, and 2 from condition05
@@ -112,8 +112,8 @@ def read_data(flag=0):
         except:
             userdata[row[2]] = [row]
         for j in range(QI_num):
-            index = gl_QI_index[j]
-            if gl_is_cat[j] is False:
+            index = QI_INDEX[j]
+            if IS_CAT[j] is False:
                 try:
                     numeric_dict[j][row[index]] += 1
                 except:
@@ -143,7 +143,7 @@ def read_data(flag=0):
                 for j in range(len(v)):
                     s.add(v[j][i])
                 if len(s) > 1:
-                    print gl_user_att[i], s
+                    print USER_ATT[i], s
                     # pdb.set_trace()
         if k in conditiondata:
             # ingnore duplicate values
@@ -152,7 +152,7 @@ def read_data(flag=0):
                 temp.add(t[2])
             hashdata[k] = []
             for i in range(QI_num):
-                index = gl_QI_index[i]
+                index = QI_INDEX[i]
                 # we assume that QIDs are not changed in dataset
                 hashdata[k].append(v[0][index])
             stemp = list(temp)
@@ -162,8 +162,8 @@ def read_data(flag=0):
     for k, v in hashdata.iteritems():
         data.append(v)
     for i in range(QI_num):
-        if gl_is_cat[i] is False:
-            static_file = open('data/informs_' + gl_user_att[gl_QI_index[i]] + '_static.pickle', 'wb')
+        if IS_CAT[i] is False:
+            static_file = open('data/informs_' + USER_ATT[QI_INDEX[i]] + '_static.pickle', 'wb')
             sort_value = list(numeric_dict[i].keys())
             sort_value.sort(cmp=cmp_str)
             pickle.dump((numeric_dict[i], sort_value), static_file)

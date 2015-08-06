@@ -1,30 +1,31 @@
-#!/usr/bin/env python
-# coding=utf-8
-
+"""
+Main module of top down greedy anonymizaiton algorithm
+"""
 # @Article{Xu2006a,
-#   Title                    = {Utility-based Anonymization for Privacy Preservation with Less Information Loss},
-#   Author                   = {Xu, Jian and Wang, Wei and Pei, Jian and Wang, Xiaoyuan and Shi, Baile and Fu, Ada Wai-Chee},
-#   Journal                  = {SIGKDD Explor. Newsl.},
-#   Year                     = {2006},
-#   Month                    = dec,
-#   Number                   = {2},
-#   Pages                    = {21--30},
-#   Volume                   = {8},
-#   Acmid                    = {1233324},
-#   Address                  = {New York, NY, USA},
-#   Doi                      = {10.1145/1233321.1233324},
-#   File                     = {Utility-based Anonymization for Privacy Preservation with Less Information Loss.pdf:All paper\\Utility-based Anonymization for Privacy Preservation with Less Information Loss.pdf:PDF},
-#   ISSN                     = {1931-0145},
-#   Issue_date               = {December 2006},
-#   Keywords                 = {data mining, k-anonymity, local recoding, privacy preservation, utility},
-#   Numpages                 = {10},
-#   Publisher                = {ACM},
-#   Url                      = {http://doi.acm.org/10.1145/1233321.1233324}
+#   Title = {Utility-based Anonymization for Privacy Preservation with Less Information Loss},
+#   Author = {Xu, Jian and Wang, Wei and Pei, Jian and Wang, Xiaoyuan and Shi, Baile and Fu, Ada Wai-Chee},
+#   Journal = {SIGKDD Explor. Newsl.},
+#   Year = {2006},
+#   Month = dec,
+#   Number = {2},
+#   Pages = {21--30},
+#   Volume = {8},
+#   Acmid = {1233324},
+#   Address = {New York, NY, USA},
+#   Doi = {10.1145/1233321.1233324},
+#   ISSN = {1931-0145},
+#   Issue_date = {December 2006},
+#   Keywords = {data mining, k-anonymity, local recoding, privacy preservation, utility},
+#   Numpages = {10},
+#   Publisher = {ACM},
+#   Url = {http://doi.acm.org/10.1145/1233321.1233324}
 # }
+
+# !/usr/bin/env python
+# coding=utf-8
 
 import pdb
 from models.numrange import NumRange
-from models.gentree import GenTree
 from utils.utility import cmp_str, get_num_list_from_str
 import operator
 import random
@@ -32,13 +33,13 @@ import time
 
 
 __DEBUG = False
-gl_QI_len = 5
-gl_K = 0
-gl_result = []
-gl_att_trees = []
-gl_QI_range = []
-gl_rounds = 3
-gl_is_cat = []
+QI_LEN = 5
+GL_K = 0
+RESULT = []
+ATT_TREES = []
+QI_RANGE = []
+ROUNDS = 3
+IS_CAT = []
 
 
 class Partition:
@@ -58,39 +59,46 @@ class Partition:
         self.can_split = True
         self.member = data[:]
         self.middle = middle[:]
-        self.allow = [1] * gl_QI_len
+        self.allow = [1] * QI_LEN
 
 
 def NCP(record):
     """
     compute Certainlty Penalty of records
     """
-    r_NCP = 0.0
-    for i in range(gl_QI_len):
-        if gl_is_cat[i] is False:
+    record_ncp = 0.0
+    for i in range(QI_LEN):
+        if IS_CAT[i] is False:
             temp = 0
             try:
                 float(record[i])
-            except:
+            except ValueError:
                 stemp = record[i].split(',')
                 temp = float(stemp[1]) - float(stemp[0])
-            r_NCP += temp * 1.0 / gl_QI_range[i]
+            record_ncp += temp * 1.0 / QI_RANGE[i]
         else:
-            r_NCP += gl_att_trees[i][record[i]].support * 1.0 / gl_QI_range[i]
-    return r_NCP
+            record_ncp += ATT_TREES[i][record[i]].support * 1.0 / QI_RANGE[i]
+    return record_ncp
 
 
 def NCP_dis(record1, record2):
+    """
+    use the NCP of generalization record1 and record2 as distance
+    """
     mid = middle_record(record1, record2)
-    return NCP(mid), mid
+    return 2 * NCP(mid), mid
 
 
 def NCP_dis_merge(partition, addition_set):
+    """
+    merge addition_set to current partition,
+    update current partion.middle
+    """
     ls = len(addition_set)
     mid = partition.middle
     for i in range(ls):
         mid = middle_record(mid, addition_set[i])
-    return NCP(mid), mid
+    return (ls + len(partition.member) * NCP(mid)), mid
 
 
 def NCP_dis_group(record, partition):
@@ -107,13 +115,17 @@ def middle_record(record1, record2):
     get the generalization result of record1 and record2
     """
     mid = []
-    for i in range(gl_QI_len):
-        if gl_is_cat[i] is False:
+    for i in range(QI_LEN):
+        if IS_CAT[i] is False:
             temp = []
             temp.extend(get_num_list_from_str(record1[i]))
             temp.extend(get_num_list_from_str(record2[i]))
             temp.sort(cmp=cmp_str)
-            mid.append(temp[0] + ',' + temp[-1])
+            # avoid 2,2 problem
+            if temp[0] == temp[-1]:
+                mid.append(temp[0])
+            else:
+                mid.append(temp[0] + ',' + temp[-1])
         else:
             mid.append(LCA(record1[i], record2[i], i))
     return mid
@@ -134,7 +146,7 @@ def LCA(u, v, index):
     """
     get lowest common ancestor of u, v on generalization hierarchy (index)
     """
-    tree_temp = gl_att_trees[index]
+    tree_temp = ATT_TREES[index]
     # don't forget to add themselves (other the level will be higher)
     u_parent = list(tree_temp[u].parent)
     u_parent.insert(0, tree_temp[u])
@@ -156,11 +168,11 @@ def get_pair(partition):
     """
     To get max distance pair in partition, we need O(n^2) running time.
     The author proposed a heuristic method: random pick u and get max_dis(u, v)
-    with O(n) running tiem; then pick max(v, u2)...after run gl_rounds times.
+    with O(n) running tiem; then pick max(v, u2)...after run ROUNDS times.
     the dis(u, v) is nearly max.
     """
     ls = len(partition.member)
-    for i in range(gl_rounds):
+    for i in range(ROUNDS):
         if i == 0:
             u = random.randrange(ls)
         else:
@@ -169,7 +181,7 @@ def get_pair(partition):
         max_index = 0
         for i in range(ls):
             if i != u:
-                rncp, __ = NCP_dis(partition.member[i], partition.member[u])
+                rncp, _ = NCP_dis(partition.member[i], partition.member[u])
                 if rncp > max_dis:
                     max_dis = rncp
                     max_index = i
@@ -177,30 +189,23 @@ def get_pair(partition):
     return (u, v)
 
 
-def cmp_str(element1, element2):
-    """
-    compare number in str format correctley
-    """
-    return cmp(int(element1), int(element2))
-
-
 def distribute_record(u, v, partition):
     """
     Distribute records based on NCP distance.
     records will be assigned to nearer group.
     """
-    r_u = partition.member[u][:]
-    r_v = partition.member[v][:]
-    u_partition = [r_u]
-    v_partition = [r_v]
+    record_u = partition.member[u][:]
+    record_v = partition.member[v][:]
+    u_partition = [record_u]
+    v_partition = [record_v]
     temp = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
-    for t in temp:
-        u_dis, __ = NCP_dis(r_u, t)
-        v_dis, __ = NCP_dis(r_v, t)
+    for record in temp:
+        u_dis, _ = NCP_dis(record_u, record)
+        v_dis, _ = NCP_dis(record_v, record)
         if u_dis > v_dis:
-            v_partition.append(t)
+            v_partition.append(record)
         else:
-            u_partition.append(t)
+            u_partition.append(record)
     return [Partition(u_partition, middle_group(u_partition)),
             Partition(v_partition, middle_group(v_partition))]
 
@@ -216,11 +221,11 @@ def balance(sub_partitions, index):
     less = sub_partitions.pop(index)
     more = sub_partitions.pop()
     all_length = len(less.member) + len(more.member)
-    require = gl_K - len(less.member)
+    require = GL_K - len(less.member)
     # First method
     dist = {}
     for i, t in enumerate(more.member):
-        dist[i], __ = NCP_dis(less.middle, t)
+        dist[i], _ = NCP_dis(less.middle, t)
 
     sorted_dist = sorted(dist.iteritems(),
                          key=operator.itemgetter(1))
@@ -228,7 +233,6 @@ def balance(sub_partitions, index):
     addition_set = [t for i, t in enumerate(more.member) if i in set(nearest_index)]
     remain_set = [t for i, t in enumerate(more.member) if i not in set(nearest_index)]
     first_ncp, first_mid = NCP_dis_merge(less, addition_set)
-    first_ncp *= len(addition_set) + len(less.member)
     r_middle = middle_group(remain_set)
     first_ncp += len(remain_set) * NCP(r_middle)
     # Second method
@@ -253,7 +257,7 @@ def can_split(partition):
     """
     if partition.can_split is False:
         return False
-    if len(partition.member) < 2 * gl_K:
+    if len(partition.member) < 2 * GL_K:
         return False
     return True
 
@@ -264,13 +268,13 @@ def anonymize(partition):
     recursively partition groups until not allowable.
     """
     if can_split(partition) is False:
-        gl_result.append(partition)
+        RESULT.append(partition)
         return
     u, v = get_pair(partition)
     sub_partitions = distribute_record(u, v, partition)
-    if len(sub_partitions[0].member) < gl_K:
+    if len(sub_partitions[0].member) < GL_K:
         balance(sub_partitions, 0)
-    elif len(sub_partitions[1].member) < gl_K:
+    elif len(sub_partitions[1].member) < GL_K:
         balance(sub_partitions, 1)
     # watch dog
     p_sum = len(partition.member)
@@ -287,20 +291,20 @@ def init(att_trees, data, K, QI_num=-1):
     """
     reset all gloabl variables
     """
-    global gl_K, gl_result, gl_QI_len, gl_att_trees, gl_QI_range, gl_is_cat
-    gl_att_trees = att_trees
+    global GL_K, RESULT, QI_LEN, ATT_TREES, QI_RANGE, IS_CAT
+    ATT_TREES = att_trees
     if QI_num <= 0:
-        gl_QI_len = len(data[0]) - 1
+        QI_LEN = len(data[0]) - 1
     else:
-        gl_QI_len = QI_num
-    gl_K = K
-    gl_result = []
-    gl_QI_range = []
-    for i in range(gl_QI_len):
-        if isinstance(gl_att_trees[i], NumRange):
-            gl_is_cat.append(False)
+        QI_LEN = QI_num
+    GL_K = K
+    RESULT = []
+    QI_RANGE = []
+    for i in range(QI_LEN):
+        if isinstance(ATT_TREES[i], NumRange):
+            IS_CAT.append(False)
         else:
-            gl_is_cat.append(True)
+            IS_CAT.append(True)
 
 
 def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
@@ -311,34 +315,34 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
     init(att_trees, data, K, QI_num)
     result = []
     middle = []
-    for i in range(gl_QI_len):
-        if gl_is_cat[i] is False:
-            gl_QI_range.append(gl_att_trees[i].range)
-            middle.append(gl_att_trees[i].value)
+    for i in range(QI_LEN):
+        if IS_CAT[i] is False:
+            QI_RANGE.append(ATT_TREES[i].range)
+            middle.append(ATT_TREES[i].value)
         else:
-            gl_QI_range.append(gl_att_trees[i]['*'].support)
-            middle.append(gl_att_trees[i]['*'].value)
-    partition = Partition(data, middle)
+            QI_RANGE.append(ATT_TREES[i]['*'].support)
+            middle.append(ATT_TREES[i]['*'].value)
+    whole_partition = Partition(data, middle)
     start_time = time.time()
-    anonymize(partition)
+    anonymize(whole_partition)
     rtime = float(time.time() - start_time)
     ncp = 0.0
-    for p in gl_result:
+    for sub_partiton in RESULT:
         rncp = 0.0
-        temp = p.middle
+        temp = sub_partiton.middle
         rncp = NCP(temp)
-        for i in range(len(p.member)):
+        for i in range(len(sub_partiton.member)):
             result.append(temp[:])
-        rncp *= len(p.member)
+        rncp *= len(sub_partiton.member)
         ncp += rncp
     # covert NCP to percentage
     ncp /= len(data)
-    ncp /= gl_QI_len
+    ncp /= QI_LEN
     ncp *= 100
     if __DEBUG:
         print "K=%d" % K
         print "size of partitions"
-        print len(gl_result)
+        print len(RESULT)
         print "NCP = %.2f %%" % ncp
         print "Total running time = %.2f" % rtime
     return (result, (ncp, rtime))

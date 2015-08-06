@@ -1,4 +1,7 @@
-#!/usr/bin/env python
+"""
+utility functions
+"""
+# !/usr/bin/env python
 # coding=utf-8
 
 
@@ -17,5 +20,5 @@ def get_num_list_from_str(stemp):
     try:
         float(stemp)
         return [stemp]
-    except:
+    except ValueError:
         return stemp.split(',')
