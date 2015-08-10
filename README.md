@@ -4,15 +4,14 @@ Top_Down_Greedy_Anonymization is a Top-down greedy data anonymization algorithm 
 
 This repository is an **open source python implementation for Top_Down_Greedy_Anonymization**. I release this algorithm in python for further study.
 
-
-
 ### Motivation
 
 Researches on data privacy have lasted for more than ten years, lots of great papers have been published. However, only a few open source projects are available on Internet [3-4], most open source projects are using algorithms proposed before 2004! Fewer projects have been used in real life. Worse more, most people even don't hear about it. Such a tragedy! 
 
 I decided to make some effort. Hoping these open source repositories can help researchers and developers on data privacy (privacy preserving data publishing).
 
-
+### Attention
+I used **both adult and INFORMS** dataset in this implementation. For clarification, **we transform NCP to percentage**, making the NCP (information loss) more meaningful (NCP=2000 v.s. NCP=20%, the former one is sensitive to size of dataset, the latter one is suit for any dataset). This NCP percentage (also called GCP[5]) is computed by dividing NCP value with the number of values in dataset (the number of values can be treated as losing all information).
 
 ### Usage:
 
@@ -49,3 +48,5 @@ My Implementation is based on Python 2.7 (not Python 3.0). Please make sure your
 [3] [UTD Anonymization Toolbox](http://cs.utdallas.edu/dspl/toolbox/)
 
 [4] [ARX- Powerful Data Anonymization](https://github.com/arx-deidentifier/arx)
+
+[5] G. Ghinita, P. Karras, P. Kalnis, N. Mamoulis. Fast data anonymization with low information loss. Proceedings of the 33rd international conference on Very large data bases, VLDB Endowment, 2007, 758-769

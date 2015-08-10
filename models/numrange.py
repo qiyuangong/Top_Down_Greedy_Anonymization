@@ -1,3 +1,6 @@
+"""
+class for numeric attribute
+"""
 #!/usr/bin/env python
 # coding=utf-8
 

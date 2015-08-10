@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+"""
+read infroms data
+"""
+
+# !/usr/bin/env python
 # coding=utf-8
 
 # Read data and read tree fuctions for INFORMS data
@@ -13,8 +17,8 @@ import pdb
 
 __DEBUG = False
 USER_ATT = ['DUID', 'PID', 'DUPERSID', 'DOBMM', 'DOBYY', 'SEX',
-               'RACEX', 'RACEAX', 'RACEBX', 'RACEWX', 'RACETHNX',
-               'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
+            'RACEX', 'RACEAX', 'RACEBX', 'RACEWX', 'RACETHNX',
+            'HISPANX', 'HISPCAT', 'EDUCYEAR', 'Year', 'marry', 'income', 'poverty']
 CONDITION_ATT = ['DUID', 'DUPERSID', 'ICD9CODX', 'year']
 # Only 5 relational attributes and 1 transaction attribute are selected (according to Poulis's paper)
 QI_INDEX = [3, 4, 6, 13, 16]
