@@ -65,7 +65,7 @@ def NCP_dis_merge(partition, addition_set):
     mid = partition.middle
     for i in range(ls):
         mid = middle_record(mid, addition_set[i])
-    return (ls + len(partition.member) * NCP(mid)), mid
+    return (ls + len(partition)) * NCP(mid), mid
 
 
 def LCA(u, v, index):

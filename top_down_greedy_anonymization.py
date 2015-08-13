@@ -42,14 +42,13 @@ ROUNDS = 3
 IS_CAT = []
 
 
-class Partition:
+class Partition(object):
 
     """
     Class for Group, which is used to keep records
     Store tree node in instances.
     self.member: records in group
     self.middle: save the generalization result of this partition
-    self.allow: 0 donate that not allow to split, 1 donate can be split
     """
 
     def __init__(self, data, middle):
@@ -59,7 +58,12 @@ class Partition:
         self.can_split = True
         self.member = data[:]
         self.middle = middle[:]
-        self.allow = [1] * QI_LEN
+
+    def __len__(self):
+        """
+        return the number of records in partition
+        """
+        return len(self.member)
 
 
 def NCP(record):
@@ -69,13 +73,14 @@ def NCP(record):
     record_ncp = 0.0
     for i in range(QI_LEN):
         if IS_CAT[i] is False:
-            temp = 0
+            value_ncp = 0
             try:
                 float(record[i])
             except ValueError:
-                stemp = record[i].split(',')
-                temp = float(stemp[1]) - float(stemp[0])
-            record_ncp += temp * 1.0 / QI_RANGE[i]
+                split_number = record[i].split(',')
+                value_ncp = float(split_number[1]) - float(split_number[0])
+            value_ncp = value_ncp * 1.0 / QI_RANGE[i]
+            record_ncp += value_ncp
         else:
             record_ncp += ATT_TREES[i][record[i]].support * 1.0 / QI_RANGE[i]
     return record_ncp
@@ -94,11 +99,11 @@ def NCP_dis_merge(partition, addition_set):
     merge addition_set to current partition,
     update current partion.middle
     """
-    ls = len(addition_set)
+    len_addition = len(addition_set)
     mid = partition.middle
-    for i in range(ls):
+    for i in range(len_addition):
         mid = middle_record(mid, addition_set[i])
-    return (ls + len(partition.member) * NCP(mid)), mid
+    return (len_addition + len(partition)) * NCP(mid), mid
 
 
 def NCP_dis_group(record, partition):
@@ -107,7 +112,7 @@ def NCP_dis_group(record, partition):
     """
     mid = middle_record(record, partition.middle)
     ncp = NCP(mid)
-    return (1 + len(partition.member)) * ncp
+    return (1 + len(partition)) * ncp
 
 
 def middle_record(record1, record2):
@@ -117,15 +122,15 @@ def middle_record(record1, record2):
     mid = []
     for i in range(QI_LEN):
         if IS_CAT[i] is False:
-            temp = []
-            temp.extend(get_num_list_from_str(record1[i]))
-            temp.extend(get_num_list_from_str(record2[i]))
-            temp.sort(cmp=cmp_str)
+            split_number = []
+            split_number.extend(get_num_list_from_str(record1[i]))
+            split_number.extend(get_num_list_from_str(record2[i]))
+            split_number.sort(cmp=cmp_str)
             # avoid 2,2 problem
-            if temp[0] == temp[-1]:
-                mid.append(temp[0])
+            if split_number[0] == split_number[-1]:
+                mid.append(split_number[0])
             else:
-                mid.append(temp[0] + ',' + temp[-1])
+                mid.append(split_number[0] + ',' + split_number[-1])
         else:
             mid.append(LCA(record1[i], record2[i], i))
     return mid
@@ -135,9 +140,9 @@ def middle_group(group_set):
     """
     get the generalization result of the group
     """
-    ls = len(group_set)
+    len_group_set = len(group_set)
     mid = group_set[0]
-    for i in range(1, ls):
+    for i in range(1, len_group_set):
         mid = middle_record(mid, group_set[i])
     return mid
 
@@ -146,17 +151,17 @@ def LCA(u, v, index):
     """
     get lowest common ancestor of u, v on generalization hierarchy (index)
     """
-    tree_temp = ATT_TREES[index]
+    gen_tree = ATT_TREES[index]
     # don't forget to add themselves (other the level will be higher)
-    u_parent = list(tree_temp[u].parent)
-    u_parent.insert(0, tree_temp[u])
-    v_parent = list(tree_temp[v].parent)
-    v_parent.insert(0, tree_temp[v])
-    ls = min(len(u_parent), len(v_parent))
-    if ls == 0:
+    u_parent = list(gen_tree[u].parent)
+    u_parent.insert(0, gen_tree[u])
+    v_parent = list(gen_tree[v].parent)
+    v_parent.insert(0, gen_tree[v])
+    min_len = min(len(u_parent), len(v_parent))
+    if min_len == 0:
         return '*'
     last = -1
-    for i in range(ls):
+    for i in range(min_len):
         pos = - 1 - i
         if u_parent[pos] != v_parent[pos]:
             break
@@ -171,15 +176,15 @@ def get_pair(partition):
     with O(n) running tiem; then pick max(v, u2)...after run ROUNDS times.
     the dis(u, v) is nearly max.
     """
-    ls = len(partition.member)
+    len_partition = len(partition)
     for i in range(ROUNDS):
         if i == 0:
-            u = random.randrange(ls)
+            u = random.randrange(len_partition)
         else:
             u = v
         max_dis = -1
         max_index = 0
-        for i in range(ls):
+        for i in range(len_partition):
             if i != u:
                 rncp, _ = NCP_dis(partition.member[i], partition.member[u])
                 if rncp > max_dis:
@@ -198,8 +203,8 @@ def distribute_record(u, v, partition):
     record_v = partition.member[v][:]
     u_partition = [record_u]
     v_partition = [record_v]
-    temp = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
-    for record in temp:
+    remain_records = [item for index, item in enumerate(partition.member) if index not in set([u, v])]
+    for record in remain_records:
         u_dis, _ = NCP_dis(record_u, record)
         v_dis, _ = NCP_dis(record_v, record)
         if u_dis > v_dis:
@@ -220,12 +225,12 @@ def balance(sub_partitions, index):
     """
     less = sub_partitions.pop(index)
     more = sub_partitions.pop()
-    all_length = len(less.member) + len(more.member)
-    require = GL_K - len(less.member)
+    all_length = len(less) + len(more)
+    require = GL_K - len(less)
     # First method
     dist = {}
-    for i, t in enumerate(more.member):
-        dist[i], _ = NCP_dis(less.middle, t)
+    for i, record in enumerate(more.member):
+        dist[i], _ = NCP_dis(less.middle, record)
 
     sorted_dist = sorted(dist.iteritems(),
                          key=operator.itemgetter(1))
@@ -257,7 +262,7 @@ def can_split(partition):
     """
     if partition.can_split is False:
         return False
-    if len(partition.member) < 2 * GL_K:
+    if len(partition) < 2 * GL_K:
         return False
     return True
 
@@ -272,22 +277,22 @@ def anonymize(partition):
         return
     u, v = get_pair(partition)
     sub_partitions = distribute_record(u, v, partition)
-    if len(sub_partitions[0].member) < GL_K:
+    if len(sub_partitions[0]) < GL_K:
         balance(sub_partitions, 0)
-    elif len(sub_partitions[1].member) < GL_K:
+    elif len(sub_partitions[1]) < GL_K:
         balance(sub_partitions, 1)
     # watch dog
-    p_sum = len(partition.member)
+    p_sum = len(partition)
     c_sum = 0
-    for t in sub_partitions:
-        c_sum += len(t.member)
+    for sub_partition in sub_partitions:
+        c_sum += len(sub_partition)
     if p_sum != c_sum:
         pdb.set_trace()
-    for t in sub_partitions:
-        anonymize(t)
+    for sub_partition in sub_partitions:
+        anonymize(sub_partition)
 
 
-def init(att_trees, data, K, QI_num=-1):
+def init(att_trees, data, k, QI_num=-1):
     """
     reset all gloabl variables
     """
@@ -297,9 +302,10 @@ def init(att_trees, data, K, QI_num=-1):
         QI_LEN = len(data[0]) - 1
     else:
         QI_LEN = QI_num
-    GL_K = K
+    GL_K = k
     RESULT = []
     QI_RANGE = []
+    IS_CAT = []
     for i in range(QI_LEN):
         if isinstance(ATT_TREES[i], NumRange):
             IS_CAT.append(False)
@@ -307,12 +313,12 @@ def init(att_trees, data, K, QI_num=-1):
             IS_CAT.append(True)
 
 
-def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
+def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num=-1):
     """
     Top Down Greedy Anonymization is a heuristic algorithm
     for relational dataset with numeric and categorical attbitues
     """
-    init(att_trees, data, K, QI_num)
+    init(att_trees, data, k, QI_num)
     result = []
     middle = []
     for i in range(QI_LEN):
@@ -321,28 +327,33 @@ def Top_Down_Greedy_Anonymization(att_trees, data, K, QI_num=-1):
             middle.append(ATT_TREES[i].value)
         else:
             QI_RANGE.append(ATT_TREES[i]['*'].support)
-            middle.append(ATT_TREES[i]['*'].value)
+            middle.append('*')
     whole_partition = Partition(data, middle)
     start_time = time.time()
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
     ncp = 0.0
-    for sub_partiton in RESULT:
+    dm = 0.0
+    for sub_partition in RESULT:
         rncp = 0.0
-        temp = sub_partiton.middle
-        rncp = NCP(temp)
-        for i in range(len(sub_partiton.member)):
-            result.append(temp[:])
-        rncp *= len(sub_partiton.member)
+        gen_result = sub_partition.middle
+        rncp = NCP(gen_result)
+        for i in range(len(sub_partition)):
+            result.append(gen_result[:])
+        rncp *= len(sub_partition)
+        dm += len(sub_partition) ** 2
         ncp += rncp
     # covert NCP to percentage
     ncp /= len(data)
     ncp /= QI_LEN
     ncp *= 100
+    # ncp /= 10000
     if __DEBUG:
-        print "K=%d" % K
+        print "K=%d" % k
         print "size of partitions"
+        print ""
         print len(RESULT)
+        print[len(partition) for partition in RESULT]
         print "NCP = %.2f %%" % ncp
         print "Total running time = %.2f" % rtime
     return (result, (ncp, rtime))
