@@ -17,10 +17,6 @@ DATA_SELECT = 'a'
 
 def get_result_one(att_trees, data, k=10):
     "run Top_Down_Greedy_Anonymization for one time, with k=10"
-    if DATA_SELECT == 'a':
-        print "Adult data"
-    else:
-        print "INFORMS data"
     print "K=%d" % k
     result, eval_result = Top_Down_Greedy_Anonymization(att_trees, data, k)
     print "NCP %0.2f" % eval_result[0] + "%"
@@ -35,10 +31,6 @@ def get_result_k(att_trees, data):
     # for K in range(5, 105, 5):
     for k in [2, 5, 10, 25, 50, 100]:
         print '#' * 30
-        if DATA_SELECT == 'a':
-            print "Adult data"
-        else:
-            print "INFORMS data"
         print "K=%d" % k
         result, eval_result = Top_Down_Greedy_Anonymization(att_trees, data, k)
         data = copy.deepcopy(data_back)
@@ -64,10 +56,6 @@ def get_result_dataset(att_trees, data, k=10, n=10):
         if pos > length:
             continue
         print '#' * 30
-        if DATA_SELECT == 'a':
-            print "Adult data"
-        else:
-            print "INFORMS data"
         print "size of dataset %d" % pos
         for j in range(n):
             temp = random.sample(data, pos)
@@ -91,10 +79,6 @@ def get_result_qi(att_trees, data, k=10):
     ls = len(data[0])
     for i in reversed(range(1, ls)):
         print '#' * 30
-        if DATA_SELECT == 'a':
-            print "Adult data"
-        else:
-            print "INFORMS data"
         print "Number of QI=%d" % i
         result, eval_result = Top_Down_Greedy_Anonymization(att_trees, data, k, i)
         data = copy.deepcopy(data_back)
@@ -113,9 +97,11 @@ if __name__ == '__main__':
     INPUT_K = 10
     # read record
     if DATA_SELECT == 'i':
+        print "INFORMS data"
         DATA = read_informs()
         ATT_TREES = read_informs_tree()
     else:
+        print "Adult data"
         DATA = read_adult()
         ATT_TREES = read_adult_tree()
     if FLAG == 'k':

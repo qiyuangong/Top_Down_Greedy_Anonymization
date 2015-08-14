@@ -82,7 +82,7 @@ def NCP(record):
             value_ncp = value_ncp * 1.0 / QI_RANGE[i]
             record_ncp += value_ncp
         else:
-            record_ncp += ATT_TREES[i][record[i]].support * 1.0 / QI_RANGE[i]
+            record_ncp += len(ATT_TREES[i][record[i]]) * 1.0 / QI_RANGE[i]
     return record_ncp
 
 
@@ -323,10 +323,10 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num=-1):
     middle = []
     for i in range(QI_LEN):
         if IS_CAT[i] is False:
-            QI_RANGE.append(ATT_TREES[i].range)
+            QI_RANGE.append(len(ATT_TREES[i]))
             middle.append(ATT_TREES[i].value)
         else:
-            QI_RANGE.append(ATT_TREES[i]['*'].support)
+            QI_RANGE.append(len(ATT_TREES[i]['*']))
             middle.append('*')
     whole_partition = Partition(data, middle)
     start_time = time.time()
