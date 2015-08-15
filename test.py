@@ -193,7 +193,6 @@ class functionTest(unittest.TestCase):
                  ['2', '2', '2', '2', '2']]
         self.assertEqual(middle_group(group), ['*', '2', '1,5', '2', '2'])
 
-
     def test_get_pair(self):
         member = [['1', '1', '10', '10', '1'],
                   ['1', '3', '4', '2', '1'],

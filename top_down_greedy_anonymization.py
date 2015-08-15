@@ -91,19 +91,17 @@ def NCP_dis(record1, record2):
     use the NCP of generalization record1 and record2 as distance
     """
     mid = middle_record(record1, record2)
-    return 2 * NCP(mid), mid
+    return NCP(mid), mid
 
 
 def NCP_dis_merge(partition, addition_set):
     """
     merge addition_set to current partition,
-    update current partion.middle
+    update current partition.middle
     """
-    len_addition = len(addition_set)
-    mid = partition.middle
-    for i in range(len_addition):
-        mid = middle_record(mid, addition_set[i])
-    return (len_addition + len(partition)) * NCP(mid), mid
+    mid = middle_group(addition_set)
+    mid = middle_record(mid, partition.middle)
+    return (len(addition_set) + len(partition)) * NCP(mid), mid
 
 
 def NCP_dis_group(record, partition):
@@ -333,7 +331,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num=-1):
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
     ncp = 0.0
-    dm = 0.0
+    dp = 0.0
     for sub_partition in RESULT:
         rncp = 0.0
         gen_result = sub_partition.middle
@@ -341,7 +339,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num=-1):
         for i in range(len(sub_partition)):
             result.append(gen_result[:])
         rncp *= len(sub_partition)
-        dm += len(sub_partition) ** 2
+        dp += len(sub_partition) ** 2
         ncp += rncp
     # covert NCP to percentage
     ncp /= len(data)
@@ -349,11 +347,13 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num=-1):
     ncp *= 100
     # ncp /= 10000
     if __DEBUG:
+        from decimal import Decimal
+        print "Discernability Penalty=%.2E" % Decimal(str(dp))
         print "K=%d" % k
         print "size of partitions"
-        print ""
         print len(RESULT)
         print[len(partition) for partition in RESULT]
         print "NCP = %.2f %%" % ncp
         print "Total running time = %.2f" % rtime
+        # pdb.set_trace()
     return (result, (ncp, rtime))
